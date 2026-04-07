@@ -1,6 +1,6 @@
 # 🛒 Ecommerce System
 
-aplicação de console em **C# (.NET 8)** que simula um pequeno sistema de e-commerce para fins didáticos.
+Aplicação de console em **C# (.NET 8)** que simula um pequeno sistema de e-commerce para fins didáticos.
 
 ---
 
