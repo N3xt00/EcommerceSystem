@@ -17,16 +17,8 @@ void Cabecalho()
     if (loja.Cliente != null)
     {
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write($"  Logado como: {loja.Cliente}");
+        Console.WriteLine($"  Logado como: {loja.Cliente}");
         Console.ResetColor();
-
-        if (loja.FormaPagamento != null)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"  |  💳 {loja.FormaPagamento}");
-            Console.ResetColor();
-        }
-        Console.WriteLine();
     }
     Console.WriteLine();
 }
@@ -93,18 +85,12 @@ while (!sair)
     }
     else
     {
-        // Indicador visual se pagamento ainda não foi escolhido
-        string pagamentoLabel = loja.FormaPagamento != null
-            ? $"Forma de Pagamento  [{loja.FormaPagamento}]"
-            : "Forma de Pagamento  ⚠ não selecionada";
-
         Console.WriteLine("  [1] Ver produtos");
         Console.WriteLine("  [2] Ver carrinho");
         Console.WriteLine("  [3] Adicionar produto ao carrinho");
         Console.WriteLine("  [4] Remover produto do carrinho");
-        Console.WriteLine($"  [5] {pagamentoLabel}");
-        Console.WriteLine("  [6] Fechar compra");
-        Console.WriteLine("  [7] Deslogar");
+        Console.WriteLine("  [5] Fechar compra");
+        Console.WriteLine("  [6] Deslogar");
         Console.WriteLine("  [0] Sair");
         Console.Write("\n  Opção: ");
 
@@ -165,17 +151,11 @@ while (!sair)
 
             case "5":
                 Cabecalho();
-                loja.EscolherPagamento();
-                Pausar();
-                break;
-
-            case "6":
-                Cabecalho();
                 loja.FecharCompra();
                 Pausar();
                 break;
 
-            case "7":
+            case "6":
                 loja.Deslogar();
                 Console.WriteLine("  Sessão encerrada.");
                 Pausar();
