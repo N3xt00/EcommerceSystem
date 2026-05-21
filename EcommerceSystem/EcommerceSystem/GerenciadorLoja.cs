@@ -9,6 +9,9 @@ namespace EcommerceSystem
         public Estante  Produtos { get; private set; }
         public Carrinho Carrinho { get; private set; }
 
+        // Forma de pagamento escolhida pelo cliente
+        public string? FormaPagamento { get; private set; }
+
         // Banco simulado de clientes cadastrados
         private readonly List<Cliente> _clientesCadastrados;
 
@@ -33,8 +36,9 @@ namespace EcommerceSystem
 
             if (c != null && c.ValidarSenha(senha))
             {
-                Cliente = c;
-                Carrinho.Limpar();   // novo login → carrinho zerado
+                Cliente       = c;
+                FormaPagamento = null;   // novo login → pagamento zerado
+                Carrinho.Limpar();       // novo login → carrinho zerado
                 return true;
             }
             return false;
@@ -42,8 +46,74 @@ namespace EcommerceSystem
 
         public void Deslogar()
         {
-            Cliente = null;
+            Cliente        = null;
+            FormaPagamento = null;
             Carrinho.Limpar();
+        }
+
+        // ── EscolherPagamento ─────────────────────────────────────────────────
+        /// <summary>
+        /// Exibe o menu de formas de pagamento e armazena a escolha.
+        /// Retorna true se uma opção válida foi selecionada.
+        /// </summary>
+        public bool EscolherPagamento()
+        {
+            Console.WriteLine();
+            Console.WriteLine("╔══════════════════════════════════════════════════╗");
+            Console.WriteLine("║           FORMA DE PAGAMENTO                     ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════╣");
+            Console.WriteLine("║  [1]  Débito                                     ║");
+            Console.WriteLine("║  [2]  Crédito                                    ║");
+            Console.WriteLine("║  [3]  Boleto Bancário                            ║");
+            Console.WriteLine("║  [4]  PIX                                        ║");
+            Console.WriteLine("║  [0]  Cancelar                                   ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════╝");
+            Console.Write("\n  Opção: ");
+
+            string? opcao = Console.ReadLine();
+
+            FormaPagamento = opcao switch
+            {
+                "1" => "Débito",
+                "2" => "Crédito",
+                "3" => "Boleto Bancário",
+                "4" => "PIX",
+                _   => null
+            };
+
+            if (FormaPagamento == null)
+            {
+                if (opcao != "0")
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("\n  ❌ Opção inválida. Nenhuma forma de pagamento selecionada.");
+                    Console.ResetColor();
+                }
+                return false;
+            }
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\n  ✅ Forma de pagamento selecionada: {FormaPagamento}");
+            Console.ResetColor();
+            return true;
+        }
+
+        // ── MostrarPagamentoAtual ─────────────────────────────────────────────
+        public void MostrarPagamentoAtual()
+        {
+            Console.WriteLine();
+            if (FormaPagamento == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  ⚠  Nenhuma forma de pagamento selecionada.");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"  💳 Forma de pagamento atual: {FormaPagamento}");
+                Console.ResetColor();
+            }
         }
 
         // ── MostrarProdutos ───────────────────────────────────────────────────
@@ -90,25 +160,31 @@ namespace EcommerceSystem
                 Console.WriteLine("⚠  O carrinho está vazio.");
                 return;
             }
+            if (FormaPagamento == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("⚠  Selecione uma forma de pagamento antes de finalizar (opção 6 do menu).");
+                Console.ResetColor();
+                return;
+            }
 
             double subTotal = Carrinho.SubTotal();
             double total    = Carrinho.Total(Cliente);
-            double desconto = subTotal - (total - (Cliente is Gold ? 0 : Cliente.Endereco?.CalcularFrete() ?? 50));
             double frete    = Cliente is Gold ? 0 : Cliente.Endereco?.CalcularFrete() ?? 50;
 
             Console.WriteLine();
-            Console.WriteLine("╔════════════════════════════════════════════╗");
-            Console.WriteLine("║              RESUMO DA COMPRA              ║");
-            Console.WriteLine("╠════════════════════════════════════════════╣");
-            Console.WriteLine($"║  Cliente  : {Cliente.Email,-30}║");
-            Console.WriteLine($"║  Plano    : {Cliente.Categoria,-30}║");
-            Console.WriteLine($"║  Endereço : {Cliente.Endereco,-30}║");
-            Console.WriteLine("╠════════════════════════════════════════════╣");
+            Console.WriteLine("╔════════════════════════════════════════════════╗");
+            Console.WriteLine("║              RESUMO DA COMPRA                  ║");
+            Console.WriteLine("╠════════════════════════════════════════════════╣");
+            Console.WriteLine($"║  Cliente  : {Cliente.Email,-34}║");
+            Console.WriteLine($"║  Plano    : {Cliente.Categoria,-34}║");
+            Console.WriteLine($"║  Endereço : {Cliente.Endereco,-34}║");
+            Console.WriteLine("╠════════════════════════════════════════════════╣");
 
             foreach (var p in Carrinho.ListaProdutos)
                 Console.WriteLine($"║  {p.Nome,-25} R$ {p.Preco,8:F2}   ║");
 
-            Console.WriteLine("╠════════════════════════════════════════════╣");
+            Console.WriteLine("╠════════════════════════════════════════════════╣");
             Console.WriteLine($"║  Subtotal          : R$ {subTotal,12:F2}       ║");
 
             if (Cliente is Bronze)
@@ -119,11 +195,14 @@ namespace EcommerceSystem
                 Console.WriteLine($"║  Desconto (30%)    : R$ {subTotal * 0.30,12:F2}       ║");
 
             Console.WriteLine($"║  Frete             : R$ {frete,12:F2}       ║");
-            Console.WriteLine("╠════════════════════════════════════════════╣");
+            Console.WriteLine("╠════════════════════════════════════════════════╣");
             Console.WriteLine($"║  TOTAL             : R$ {total,12:F2}       ║");
-            Console.WriteLine("╚════════════════════════════════════════════╝");
+            Console.WriteLine("╠════════════════════════════════════════════════╣");
+            Console.WriteLine($"║  Pagamento : {FormaPagamento,-34}║");
+            Console.WriteLine("╚════════════════════════════════════════════════╝");
 
             Carrinho.Limpar();
+            FormaPagamento = null;
             Console.WriteLine("\n✅ Compra realizada com sucesso! Carrinho esvaziado.\n");
         }
 
